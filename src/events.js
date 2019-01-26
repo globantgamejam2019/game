@@ -62,10 +62,16 @@ function decayRooms() {
 }
 
 function calculatePointVariation() {
+    let decayingRoomsCount = 0;
     let roomCount = rooms.length;
-    let decayingRoomsCount = rooms.filter(
-        x => Object.keys(decayingRooms).includes(x));
-    globalScore -= decayingRoomsCount * unorderedPointSubstraction
+    for (const room in decayingRooms) {
+        if (decayingRooms[room] === maximumRoomState) {
+            globalScore += orderedPointAddition;
+        } else if (decayingRooms[room] === minimumRoomState) {
+            globalScore -= unorderedPointSubstraction;
+        }
+        decayingRoomsCount += 1;
+    }
     globalScore += (roomCount - decayingRoomsCount) * orderedPointAddition;
 }
 
@@ -103,7 +109,7 @@ function cursorWasPressed(keyName) {
         if (keyName === requiredKeys[0]) {
             requiredKeys.shift();
             //TODO Remove first Icon from Screen. Possibly Shift other array too. Reorganize the position of others?
-            if (Object.keys(requiredKeys).length === 0) {
+            if (requiredKeys.length === 0) {
                 removeActiveRoomFromDecay();
                 isKeyPressingActivityActive = false;
             }
@@ -115,15 +121,16 @@ function cursorWasPressed(keyName) {
 }
 
 function removeActiveRoomFromDecay() {
-    var index = decayingRooms.indexOf(currentRoom);
-    if (index !== -1) decayingRooms.splice(index, 1);
+    delete decayingRooms[currentRoom];
 }
 
 function zWasPressed() {
     if (activityIsActive()) {
         endAllActivities();
-    } else {
+    } else if (decayingRooms.hasOwnProperty(currentRoom)) {
         startMaintenanceActivity();
+    } else {
+        game.sound.play('wrong_sound');
     }
 }
 
