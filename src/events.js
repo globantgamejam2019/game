@@ -1,31 +1,36 @@
 var globalScore;
 
-let pointTickTime = 2000;
-let orderedPointAddition = 10;
-let unorderedPointSubstraction = 20;
+const pointTickTime = 2000;
+const orderedPointAddition = 10;
+const unorderedPointSubstraction = 20;
 
-let minimumRoomState = 0;
-let maximumRoomState = 100;
-let startingRoomState = maximumRoomState;
+const minimumRoomState = 0;
+const maximumRoomState = 100;
+const startingRoomState = maximumRoomState;
 
-let decaySelectionTime = 3000;
+const decaySelectionTime = 3000;
 
-let decayTickTime = 100;
-let decayTickValue = 0.12;
+const decayTickTime = 100;
+const decayTickValue = 0.12;
 
-let keySpamIncrease = 0.7;
+const keySpamIncrease = 0.7;
 
-let possibleKeys = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-let amountOfKeystrokesRequired = 6;
-var requiredKeys;
+const possibleKeys = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+const amountOfKeystrokesRequired = 6;
+var requiredKeys = [];
+var requiredKeyImages = [];
 var wrongSound;
 
 var isSpammingActivityActive = false;
 var isKeyPressingActivityActive = false;
 
-let rooms = ["BATHROOM", "BEDROOM", "KITCHEN", "LIVING"]
+const keyImageSize = 20;
+const separationBetweenShownKeys = 24;
+const heightOfKeyImagesAbovePlayer = 25;
 
-let decayingRooms = {}
+const rooms = ["BATHROOM", "BEDROOM", "KITCHEN", "LIVING"]
+
+var decayingRooms = {}
 
 Array.prototype.randomElement = function () {
     return this[Math.floor((Math.random() * this.length))];
@@ -76,13 +81,13 @@ function calculatePointVariation() {
 }
 
 function startMaintenanceActivity() {
-    let random = Math.random() >= 0.4;
-    if (random) {
-        isSpammingActivityActive = true;
-    } else {
-        fillRequiredKeystrokesArray();
-        isKeyPressingActivityActive = true;
-    }
+    //let random = Math.random() >= 0.4;
+    //if (random) {
+    //    isSpammingActivityActive = true;
+    //} else {
+    fillRequiredKeystrokesArray();
+    isKeyPressingActivityActive = true;
+    //}
 }
 
 function xWasPressed() {
@@ -97,18 +102,31 @@ function xWasPressed() {
 }
 
 function fillRequiredKeystrokesArray() {
-    requiredKeys = [];
+    clearKeyImages();
     for (i = 0; i < amountOfKeystrokesRequired; i++) {
         requiredKeys[i] = possibleKeys.randomElement();
     }
-    // TODO: Show Icons On Screen. Possibly load array of sprites.
+    showCorrespondingKeysOnScreen();
+}
+
+function showCorrespondingKeysOnScreen() {
+    console.log(requiredKeys);
+    let totalSpace = amountOfKeystrokesRequired * keyImageSize;
+    let startingX = player.x - (totalSpace / 2);
+    let yPosition = player.y - heightOfKeyImagesAbovePlayer;
+    for (i = 0; i < requiredKeys.length; i++) {
+        let keyImage = game.add.image(startingX, yPosition, requiredKeys[i]);
+        requiredKeyImages.push(keyImage)
+        startingX += separationBetweenShownKeys;
+    }
 }
 
 function cursorWasPressed(keyName) {
     if (isKeyPressingActivityActive) {
         if (keyName === requiredKeys[0]) {
             requiredKeys.shift();
-            //TODO Remove first Icon from Screen. Possibly Shift other array too. Reorganize the position of others?
+            let keyImage = requiredKeyImages.shift();
+            keyImage.destroy();
             if (requiredKeys.length === 0) {
                 removeActiveRoomFromDecay();
                 isKeyPressingActivityActive = false;
@@ -142,6 +160,14 @@ function endAllActivities() {
     isSpammingActivityActive = false;
     isKeyPressingActivityActive = false;
     requiredKeys = [];
+    clearKeyImages();
+}
+
+function clearKeyImages() {
+    for (i = 0; i < requiredKeyImages.length; i++) {
+        requiredKeyImages[i].destroy();
+    }
+    requiredKeyImages = [];
 }
 
 if (!Object.keys) Object.keys = function (o) {

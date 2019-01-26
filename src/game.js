@@ -65,6 +65,10 @@ function preload ()
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('climbing', 'assets/climbing.gif', { frameWidth: 36, frameHeight: 36 });
+    this.load.image('UP', 'assets/up_arrow.png');
+    this.load.image('DOWN', 'assets/down_arrow.png');
+    this.load.image('LEFT', 'assets/left_arrow.png');
+    this.load.image('RIGHT', 'assets/right_arrow.png');
 }
 
 // Create game canvas
