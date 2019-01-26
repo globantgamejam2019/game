@@ -21,6 +21,7 @@ var cursors;
 var xKey;
 
 function preload() {
+    this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
 }
 
 function create() {
