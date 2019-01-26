@@ -26,6 +26,7 @@ function preload() {
 
 function create() {
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     cursors = this.input.keyboard.createCursorKeys();
     startEvents(this);
 }
@@ -33,6 +34,9 @@ function create() {
 function update() {
     if (Phaser.Input.Keyboard.JustDown(xKey)) {
         xWasPressed();
+    }
+    if (Phaser.Input.Keyboard.JustDown(zKey)) {
+        zWasPressed();
     }
     if (Phaser.Input.Keyboard.JustDown(cursors.left)) {
         cursorWasPressed('LEFT');

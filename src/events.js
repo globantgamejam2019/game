@@ -1,12 +1,15 @@
 var game;
 var globalScore;
-var activeRoom;
+
+let pointTickTime = 2000;
+let orderedPointAddition = 10;
+let unorderedPointSubstraction = 20;
 
 let minimumRoomState = 0;
 let maximumRoomState = 100;
 let startingRoomState = maximumRoomState;
 
-let decaySelectionTime = 5000;
+let decaySelectionTime = 3000;
 
 let decayTickTime = 100;
 let decayTickValue = 0.12;
@@ -21,7 +24,7 @@ var wrongSound;
 var isSpammingActivityActive = true;
 var isKeyPressingActivityActive = false;
 
-let rooms = ["bathroom", "bedroom", "kitchen", "living"]
+let rooms = ["BATHROOM", "BEDROOM", "KITCHEN", "LIVING"]
 
 let decayingRooms = {}
 
@@ -38,6 +41,7 @@ function startEvents(gameObject) {
 function startRoomDecayTimers() {
     setInterval(pickRoomToDecay, decaySelectionTime);
     setInterval(decayRooms, decayTickTime);
+    setInterval(calculatePointVariation, pointTickTime);
 }
 
 function pickRoomToDecay() {
@@ -58,8 +62,15 @@ function decayRooms() {
     }
 }
 
-function startMaintenanceActivity(room) {
-    activeRoom = room;
+function calculatePointVariation() {
+    let roomCount = rooms.length;
+    let decayingRooms = rooms.filter(
+        x => Object.keys(decayingRooms).includes(x));
+    globalScore -= decayingRooms * unorderedPointSubstraction
+    globalScore += (roomCount - decayingRooms) * orderedPointAddition;
+}
+
+function startMaintenanceActivity() {
     let random = Math.random() >= 0.4;
     if (random) {
         isSpammingActivityActive = true;
@@ -71,10 +82,11 @@ function startMaintenanceActivity(room) {
 
 function xWasPressed() {
     if (isSpammingActivityActive) {
-        roomStates[activeRoom] = Math.min(maximumRoomState,
-            roomStates[activeRoom] += keySpamIncrease);
-        if (roomStates[activeRoom] === maximumRoomState) {
+        roomStates[currentRoom] = Math.min(maximumRoomState,
+            roomStates[currentRoom] += keySpamIncrease);
+        if (roomStates[currentRoom] === maximumRoomState) {
             removeActiveRoomFromDecay();
+            isSpammingActivityActive = false;
         }
     }
 }
@@ -93,6 +105,7 @@ function cursorWasPressed(keyName) {
         //TODO Remove first Icon from Screen. Possibly Shift other array too. Reorganize the position of others?
         if (Object.keys(requiredKeys).length === 0) {
             removeActiveRoomFromDecay();
+            isKeyPressingActivityActive = false;
         }
     } else {
         game.sound.play('wrong_sound');
@@ -101,8 +114,26 @@ function cursorWasPressed(keyName) {
 }
 
 function removeActiveRoomFromDecay() {
-    var index = decayingRooms.indexOf(activeRoom);
+    var index = decayingRooms.indexOf(currentRoom);
     if (index !== -1) decayingRooms.splice(index, 1);
+}
+
+function zWasPressed() {
+    if (activityIsActive()) {
+        endAllActivities();
+    } else {
+        startMaintenanceActivity();
+    }
+}
+
+function activityIsActive() {
+    return isSpammingActivityActive || isKeyPressingActivityActive;
+}
+
+function endAllActivities() {
+    isSpammingActivityActive = false;
+    isKeyPressingActivityActive = false;
+    requiredKeys = [];
 }
 
 if (!Object.keys) Object.keys = function (o) {
