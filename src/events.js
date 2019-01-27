@@ -12,8 +12,8 @@ const startingDecayValue = maximumRoomState;
 
 const decaySelectionTime = 4000;
 
-const decayTickTime = 50;
-const decayTickValue = 0.25;
+const roomDecayTickTime = 50;
+const roomDecayTickValue = 0.25;
 
 const keySpamIncrease = 5;
 
@@ -34,7 +34,17 @@ const rooms = ["BATHROOM", "BEDROOM", "KITCHEN", "LIVING"]
 var decayingRooms = {}
 var lastRemovedRoom;
 
-var xkeyImage;
+const randomEvents = ["PHONE", "DOOR"];
+var activeRandomEvents = {};
+
+const startingEventState = 100;
+const minimumEventState = 0;
+const eventDecayTickTime = 50;
+const eventDecayTickValue = 0.25;
+const eventPointsModifier = 50;
+
+var eventCompletionTimer;
+let eventCompletionTimeout = 3000;
 
 Array.prototype.randomElement = function () {
     return this[Math.floor((Math.random() * this.length))];
@@ -44,13 +54,19 @@ function startEvents(gameObject) {
     game = gameObject
     game.sound.add('wrong_sound');
     startRoomDecayTimers();
+    startRandomEventTimers();
     pickRoomToDecay(startingRoomState);
 }
 
 function startRoomDecayTimers() {
     timers[0] = setInterval(pickRoomToDecay, decaySelectionTime);
-    timers[1] = setInterval(decayRooms, decayTickTime);
+    timers[1] = setInterval(decayRooms, roomDecayTickTime);
     timers[2] = setInterval(calculatePointVariation, pointTickTime);
+}
+
+function startRandomEventTimers() {
+    setTimeout(startRandomEvent, 20000);
+    setTimeout(startRandomEvent, 40000);
 }
 
 function pickRoomToDecay(value = startingDecayValue) {
@@ -65,9 +81,34 @@ function pickRoomToDecay(value = startingDecayValue) {
 function decayRooms() {
     for (const room in decayingRooms) {
         let newValue = Math.max(minimumRoomState,
-            decayingRooms[room] - decayTickValue);
+            decayingRooms[room] - roomDecayTickValue);
         decayingRooms[room] = newValue;
     }
+}
+
+function startRandomEvent() {
+    let unstartedEvents = randomEvents.filter(
+        x => !Object.keys(activeRandomEvents).includes(x));
+    let eventToStart = unstartedEvents.randomElement();
+    if (eventToStart) {
+        game.sound.play(eventToStart);
+        activeRandomEvents[eventToStart] = startingEventState;
+    }
+}
+
+function decayEvents() {
+    for (const event in activeRandomEvents) {
+        let newValue = activeRandomEvents[event] - eventDecayTickTime;
+        if (newValue < minimumEventState) {
+            processEventFailure(event);
+        }
+        decayingRooms[room] = newValue;
+    }
+}
+
+function processEventFailure(event) {
+    globalScore -= eventPointsModifier;
+    delete activeRandomEvents[event];
 }
 
 function calculatePointVariation() {
@@ -87,7 +128,6 @@ function calculatePointVariation() {
 function startMaintenanceActivity() {
     let random = Math.random() >= 0.5;
     if (random) {
-        showXonScreen();
         isSpammingActivityActive = true;
     } else {
         fillRequiredKeystrokesArray();
@@ -96,15 +136,28 @@ function startMaintenanceActivity() {
 }
 
 function xWasPressed() {
+    eventCompletionTimer = setTimeout(processEventCompletion, eventCompletionTimeout);
     if (isSpammingActivityActive) {
         decayingRooms[currentRoom] = Math.min(maximumRoomState,
             decayingRooms[currentRoom] + keySpamIncrease);
         if (decayingRooms[currentRoom] === maximumRoomState) {
             removeActiveRoomFromDecay();
-            xkeyImage.destroy();
             isSpammingActivityActive = false;
         }
     }
+}
+
+function processEventCompletion() {
+    const event = getAssociatedEventForPlayerPosition(); //TODO
+    if (event && activeRandomEvents[event]) {
+        globalScore += eventPointsModifier;
+        delete activeRandomEvents[event];
+    }
+}
+
+function clearEventCompletionTimer() {
+    clearTimeout(eventCompletionTimeout);
+    eventCompletionTimeout = null;
 }
 
 function fillRequiredKeystrokesArray() {
@@ -124,13 +177,6 @@ function showCorrespondingKeysOnScreen() {
         requiredKeyImages.push(keyImage)
         startingX += separationBetweenShownKeys;
     }
-}
-function showXonScreen(){
-    let totalSpace = keyImageSize - 10;
-    let startingX = player.x - (totalSpace / 2);
-    let yPosition = player.y - 28;
-    xkeyImage = game.add.sprite(startingX, yPosition, 'x_pressed');
-    xkeyImage.anims.play('pressed', true);
 }
 
 function cursorWasPressed(keyName) {
@@ -176,7 +222,6 @@ function endAllActivities() {
     isSpammingActivityActive = false;
     isKeyPressingActivityActive = false;
     requiredKeys = [];
-    xkeyImage.destroy();
     clearKeyImages();
 }
 

@@ -1,17 +1,8 @@
-# System and IDE files
-Thumbs.db
-.DS_Store
-.idea
-*.suo
-*.sublime-project
-*.sublime-workspace
+# backups folder
+backup
 
-# Vendors
-node_modules/
+# todo file
+TODO
 
-# Build
-build/
-/npm-debug.log
-
-assets/
-phaser.min.js
+# notes file
+NOTES

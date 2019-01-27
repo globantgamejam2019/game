@@ -26,18 +26,22 @@ var lastMovement = "";
 var currentRoom = "LIVING";
 var usingLadder = false;
 var xKey;
-var gameTime = 7000000;
+var gameTime = 70000;
 var minimumWinningScore = 300;
-var xPressed;
+var gameStarted = false;
 
 var graphics;
 var timerEvent;
 var clockSize = 20;
 
 var game = new Phaser.Game(config);
+var backgroundMusic;
 
 function preload() {
-    this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
+    this.load.audio('wrong_sound', 'sounds/wrongSound.ogg');
+    this.load.audio('background_music', 'sounds/backgroundMusic.ogg');
+    this.load.audio('PHONE', 'sounds/phoneRing.ogg');
+    this.load.audio('DOOR', 'sounds/knockDoor.ogg');
 
     this.load.image('tasks_bathroom', 'assets/tasks_bathroom.png');
     this.load.image('tasks_bedroom', 'assets/tasks_bedroom.png');
@@ -58,7 +62,9 @@ function preload() {
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('climbing', 'assets/climbing.gif', { frameWidth: 36, frameHeight: 36 });
-    this.load.spritesheet('x_pressed', 'assets/press_x_key.png', { frameWidth: 20, frameHeight: 20 });
+
+    this.load.spritesheet('start_game', 'assets/start_button.png', { frameWidth: 98, frameHeight: 24 });
+
     this.load.image('UP', 'assets/up_arrow.png');
     this.load.image('DOWN', 'assets/down_arrow.png');
     this.load.image('LEFT', 'assets/left_arrow.png');
@@ -66,6 +72,10 @@ function preload() {
 }
 
 function create() {
+    backgroundMusic = this.sound.add('background_music');
+    backgroundMusic.volume = 0.25;
+    backgroundMusic.play();
+
     this.add.image(420, 210, 'background');
 
     this.add.image(235, 100, 'tasks_bathroom');
@@ -73,11 +83,8 @@ function create() {
     this.add.image(200, 235, 'tasks_kitchen');
     this.add.image(590, 235, 'tasks_living');
 
-    /*buttonX = this.physics.add.staticGroup();
-    buttonX.create(170,150,'x_pressed');*/
-
-
     platforms = this.physics.add.staticGroup();
+
     platforms.create(414, 328, 'first_floor');
     platforms.create(172, 201, 'second_floor_1');
     platforms.create(389, 201, 'second_floor_2');
@@ -88,15 +95,16 @@ function create() {
     platforms.create(363, 105, 'open_wall');
     platforms.create(433, 238, 'open_wall');
 
-    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesOut, callbackScope: this });
+    buttonPlay = this.physics.add.sprite(414, 300, 'start_game');
+    buttonPlay.body.allowGravity = false;
+
+    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesUp, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
 
     player = this.physics.add.sprite(670, 220, 'dude');
 
-
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
-
 
     this.anims.create({
         key: 'left',
@@ -134,10 +142,10 @@ function create() {
     });
 
     this.anims.create({
-        key: 'pressed',
-        frames: this.anims.generateFrameNumbers('x_pressed', { start: 0, end: 1 }),
-        frameRate: 5,
-        repeat: -1
+        key: 'pushing_start',
+        frames: this.anims.generateFrameNumbers('start_game', { start: 0, end: 1 }),
+        frameRate: 10,
+        repeat: 1
     });
 
     cursors = this.input.keyboard.createCursorKeys();
@@ -146,12 +154,10 @@ function create() {
 
     this.physics.add.collider(player, platforms);
 
-    startEvents(this);
-
     scoreText = this.add.text(760, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 }
 
-function timesOut() {
+function timesUp() {
     if (globalScore >= minimumWinningScore) {
         this.add.image(420, 210, 'you_won');
     }
@@ -159,6 +165,7 @@ function timesOut() {
         this.add.image(420, 210, 'you_lost');
     }
     gameOver = true;
+    backgroundMusic.stop();
     clearAllTimers();
     player.setTint(0x555555);
     player.setVelocityX(0);
@@ -200,12 +207,12 @@ function update() {
         player.body.allowGravity = true;
     }
 
-    if (cursors.left.isDown && !usingLadder && !activityIsActive()) {
+    if (cursors.left.isDown && !usingLadder && !activityIsActive() && gameStarted) {
         player.setVelocityX(-160);
         player.anims.play('left', true);
         lastMovement = "LEFT";
     }
-    else if (cursors.right.isDown && !usingLadder && !activityIsActive()) {
+    else if (cursors.right.isDown && !usingLadder && !activityIsActive() && gameStarted) {
         player.setVelocityX(160);
         player.anims.play('right', true);
         lastMovement = "RIGHT";
@@ -215,48 +222,61 @@ function update() {
         if (usingLadder) {
             player.anims.play('climbing', true);
         }
+        else if (lastMovement == "RIGHT") {
+            player.anims.play('static_right', true);
+        }
         else {
-            if (lastMovement == "RIGHT") {
-                player.anims.play('static_right', true);
-            }
-            else {
-                player.anims.play('static_left', true);
-            }
+            player.anims.play('static_left', true);
         }
     }
 
-    if (cursors.up.isDown && !activityIsActive()) {
-        if (player.body.touching.down || usingLadder) {
-            if (useLadder(player.x, player.y)) {
-                usingLadder = true;
-                player.body.allowGravity = false;
-                player.setVelocityY(-80);
-            }
-            else {
-                usingLadder = false;
-                player.body.allowGravity = true;
-                player.setVelocityY(-330);
-            }
+    if (cursors.up.isDown && !activityIsActive() && gameStarted &&
+        (player.body.touching.down || usingLadder)) {
+        if (useLadder(player.x, player.y)) {
+            usingLadder = true;
+            player.body.allowGravity = false;
+            player.setVelocityY(-80);
+        }
+        else {
+            usingLadder = false;
+            player.body.allowGravity = true;
+            player.setVelocityY(-330);
         }
     }
 
-    if (Phaser.Input.Keyboard.JustDown(cursors.left)) {
-        cursorWasPressed('LEFT');
+    if (gameStarted)
+    {
+        if (Phaser.Input.Keyboard.JustDown(cursors.left)) {
+            cursorWasPressed('LEFT');
+        }
+        if (Phaser.Input.Keyboard.JustDown(cursors.right)) {
+            cursorWasPressed('RIGHT');
+        }
+        if (Phaser.Input.Keyboard.JustDown(cursors.down)) {
+            cursorWasPressed('DOWN');
+        }
+        if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
+            cursorWasPressed('UP');
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(xKey)) {
+            xWasPressed();
+        } else if (!xKey.isDown) {
+            clearEventCompletionTimer();
+        }
     }
-    if (Phaser.Input.Keyboard.JustDown(cursors.right)) {
-        cursorWasPressed('RIGHT');
-    }
-    if (Phaser.Input.Keyboard.JustDown(cursors.down)) {
-        cursorWasPressed('DOWN');
-    }
-    if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
-        cursorWasPressed('UP');
-    }
-    if (Phaser.Input.Keyboard.JustDown(xKey)) {
-        xWasPressed();
-    }
+
     if (Phaser.Input.Keyboard.JustDown(zKey)) {
-        zWasPressed();
+        if (gameStarted) {
+            
+            zWasPressed();
+        }
+        else {
+            buttonPlay.anims.play('pushing_start', true);
+            gameStarted = true;
+            startEvents(this);
+            buttonPlay.destroy();
+        }
     }
 }
 
@@ -269,23 +289,17 @@ function getCurrentRoom(x, y) {
             return "KITCHEN";
         }
     }
+    else if (x >= 366) {
+        return "BEDROOM";
+    }
     else {
-        if (x >= 366) {
-            return "BEDROOM";
-        }
-        else {
-            return "BATHROOM";
-        }
+        return "BATHROOM";
     }
 }
 
 function useLadder(x, y) {
-    if (y > 179 && y <= 309) {
-        if ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)) {
-            return true;
-        }
-    }
-    return false;
+    return (y > 179 && y <= 309 &&
+        ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)));
 }
 
 function percentageToProgress(percentage) {
