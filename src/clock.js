@@ -9,7 +9,6 @@ function drawClock(x, y, timer) {
     var p2;
     var size;
 
-    //  The overall progress hand (only if repeat > 0)
     if (timer.repeat > 0) {
         size = clockSize * 0.9;
 
@@ -38,7 +37,6 @@ function drawClock(x, y, timer) {
         graphics.closePath();
     }
 
-    //  The current iteration hand
     size = clockSize * 0.95;
 
     angle = (360 * timer.getProgress()) - 90;

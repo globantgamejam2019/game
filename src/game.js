@@ -201,28 +201,25 @@ function update() {
         if (usingLadder) {
             player.anims.play('climbing', true);
         }
+        else if (lastMovement == "RIGHT") {
+            player.anims.play('static_right', true);
+        }
         else {
-            if (lastMovement == "RIGHT") {
-                player.anims.play('static_right', true);
-            }
-            else {
-                player.anims.play('static_left', true);
-            }
+            player.anims.play('static_left', true);
         }
     }
 
-    if (cursors.up.isDown && !activityIsActive()) {
-        if (player.body.touching.down || usingLadder) {
-            if (useLadder(player.x, player.y)) {
-                usingLadder = true;
-                player.body.allowGravity = false;
-                player.setVelocityY(-80);
-            }
-            else {
-                usingLadder = false;
-                player.body.allowGravity = true;
-                player.setVelocityY(-330);
-            }
+    if (cursors.up.isDown && !activityIsActive() &&
+        (player.body.touching.down || usingLadder)) {
+        if (useLadder(player.x, player.y)) {
+            usingLadder = true;
+            player.body.allowGravity = false;
+            player.setVelocityY(-80);
+        }
+        else {
+            usingLadder = false;
+            player.body.allowGravity = true;
+            player.setVelocityY(-330);
         }
     }
 
@@ -238,11 +235,14 @@ function update() {
     if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
         cursorWasPressed('UP');
     }
-    if (Phaser.Input.Keyboard.JustDown(xKey)) {
-        xWasPressed();
-    }
     if (Phaser.Input.Keyboard.JustDown(zKey)) {
         zWasPressed();
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(xKey)) {
+        xWasPressed();
+    } else if (!xKey.isDown) {
+        clearEventCompletionTimer();
     }
 }
 
@@ -255,23 +255,17 @@ function getCurrentRoom(x, y) {
             return "KITCHEN";
         }
     }
+    else if (x >= 366) {
+        return "BEDROOM";
+    }
     else {
-        if (x >= 366) {
-            return "BEDROOM";
-        }
-        else {
-            return "BATHROOM";
-        }
+        return "BATHROOM";
     }
 }
 
 function useLadder(x, y) {
-    if (y > 179 && y <= 309) {
-        if ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)) {
-            return true;
-        }
-    }
-    return false;
+    return (y > 179 && y <= 309 &&
+        ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)));
 }
 
 function percentageToProgress(percentage) {
