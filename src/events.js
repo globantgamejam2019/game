@@ -1,5 +1,6 @@
 var globalScore = 0;
 let timers = [];
+let timeouts = [];
 
 const pointTickTime = 2000;
 const orderedPointAddition = 10;
@@ -16,6 +17,7 @@ const roomDecayTickTime = 50;
 const roomDecayTickValue = 0.25;
 
 const keySpamIncrease = 5;
+var xKeyImage;
 
 const possibleKeys = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 const amountOfKeystrokesRequired = 6;
@@ -35,6 +37,10 @@ var decayingRooms = {}
 var lastRemovedRoom;
 
 const randomEvents = ["PHONE", "DOOR"];
+const eventCoordinates = {
+    "PHONE": [685, 710, 150, 195],
+    "DOOR": [690, 720, 275, 330]
+}
 var activeRandomEvents = {};
 
 const startingEventState = 100;
@@ -52,7 +58,6 @@ Array.prototype.randomElement = function () {
 
 function startEvents(gameObject) {
     game = gameObject
-    game.sound.add('wrong_sound');
     startRoomDecayTimers();
     startRandomEventTimers();
     pickRoomToDecay(startingRoomState);
@@ -65,8 +70,8 @@ function startRoomDecayTimers() {
 }
 
 function startRandomEventTimers() {
-    setTimeout(startRandomEvent, 20000);
-    setTimeout(startRandomEvent, 40000);
+    timeouts[0] = setTimeout(startRandomEvent, 50000);
+    timeouts[1] = setTimeout(startRandomEvent, 120000);
 }
 
 function pickRoomToDecay(value = startingDecayValue) {
@@ -128,6 +133,7 @@ function calculatePointVariation() {
 function startMaintenanceActivity() {
     let random = Math.random() >= 0.5;
     if (random) {
+        showXOnScreen();
         isSpammingActivityActive = true;
     } else {
         fillRequiredKeystrokesArray();
@@ -142,13 +148,14 @@ function xWasPressed() {
             decayingRooms[currentRoom] + keySpamIncrease);
         if (decayingRooms[currentRoom] === maximumRoomState) {
             removeActiveRoomFromDecay();
+            xKeyImage.destroy();
             isSpammingActivityActive = false;
         }
     }
 }
 
 function processEventCompletion() {
-    const event = getAssociatedEventForPlayerPosition(); //TODO
+    const event = getAssociatedEventForPlayerPosition();
     if (event && activeRandomEvents[event]) {
         globalScore += eventPointsModifier;
         delete activeRandomEvents[event];
@@ -221,6 +228,7 @@ function activityIsActive() {
 function endAllActivities() {
     isSpammingActivityActive = false;
     isKeyPressingActivityActive = false;
+    xKeyImage.destroy();
     requiredKeys = [];
     clearKeyImages();
 }
@@ -236,6 +244,35 @@ function clearAllTimers() {
     for (i = 0; i < timers.length; i++) {
         clearInterval(timers[i]);
     }
+    for (i = 0; i < timeouts.length; i++) {
+        clearTimeout(timeouts[i]);
+    }
+}
+
+function showXOnScreen() {
+    let startingX = player.x;
+    let yPosition = player.y - 28;
+    xKeyImage = game.add.sprite(startingX, yPosition, 'x_pressed');
+    xKeyImage.anims.play('pressed', true);
+}
+
+function getAssociatedEventForPlayerPosition() {
+    for (const event in eventCoordinates) {
+        const coordinates = eventCoordinates[event];
+        const minimumX = coordinates[0];
+        const maximumX = coordinates[1];
+        const minimumY = coordinates[2];
+        const maximumY = coordinates[3];
+        if (valueIsBetween(player.x, minimumX, maximumX) &&
+            valueIsBetween(player.y, minimumY, maximumY)) {
+            return event;
+        }
+    }
+    return null;
+}
+
+function valueIsBetween(value, minimum, maximum) {
+    return minimum <= value && value <= maximum;
 }
 
 if (!Object.keys) Object.keys = function (o) {
