@@ -28,6 +28,8 @@ var scoreText;
 var lastMovement = "";
 var currentRoom = "LIVING";
 var usingLadder = false;
+var xKey;
+var gameTime = 120000;
 
 // Clock related globals
 var graphics;
@@ -40,6 +42,10 @@ var game = new Phaser.Game(config);
 // Preload all assets
 function preload ()
 {
+    // Sounds
+    this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
+
+    // Pictures
     this.load.image('background', 'assets/background.png');
     this.load.image('background_grey', 'assets/background_grey.png');
     this.load.image('you_won', 'assets/won.png');
@@ -119,8 +125,13 @@ function create ()
     this.physics.add.collider(player, platforms);
 
     // Create clock related objects
-    timerEvent = this.time.addEvent({ delay: 60000, callback: timesOut, callbackScope: this });
+    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesOut, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
+
+    xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+    
+    startEvents(this);
 
 }
 
@@ -139,6 +150,10 @@ function timesOut()
     // Stop player movement
     player.setVelocityX(0);
 
+    // In case player was going up ladder
+    usingLadder = false;
+    player.body.allowGravity = true;
+
     // Set last movement frame
     if (lastMovement == "RIGHT")
     {
@@ -153,7 +168,6 @@ function timesOut()
 // Main update function
 function update ()
 {
-
     // Get current room
     currentRoom = getCurrentRoom(player.x, player.y);
 
@@ -200,21 +214,48 @@ function update ()
         }
     }
 
-    if (cursors.up.isDown && player.body.touching.down)
+    if (cursors.up.isDown)
     {
-        if (useLadder(player.x, player.y))
+        if (player.body.touching.down)
         {
-            usingLadder = true;
-            player.body.allowGravity = false;
-            player.setVelocityY(-80);
-        }
-        else
-        {
-            usingLadder = false;
-            player.body.allowGravity = true;
-            player.setVelocityY(-330);
+            if (useLadder(player.x, player.y))
+            {
+                usingLadder = true;
+                player.body.allowGravity = false;
+                player.setVelocityY(-80);
+            }
+            else
+            {
+                usingLadder = false;
+                player.body.allowGravity = true;
+                player.setVelocityY(-330);
+            }
         }
     }
+
+    if (Phaser.Input.Keyboard.JustDown(cursors.left)) {
+        cursorWasPressed('LEFT');
+    }
+    if (Phaser.Input.Keyboard.JustDown(cursors.right)) {
+        cursorWasPressed('RIGHT');
+    }
+    if (Phaser.Input.Keyboard.JustDown(cursors.down)) {
+        cursorWasPressed('DOWN');
+    }
+    if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
+        cursorWasPressed('UP');
+    }
+    if (Phaser.Input.Keyboard.JustDown(xKey))
+    {
+        console.log("X KEY");
+        xWasPressed();
+    }
+    if (Phaser.Input.Keyboard.JustDown(zKey))
+    {
+        console.log("Z KEY");
+        zWasPressed();
+    }
+
 }
 
 // Returns current room based on (x,y) players location
@@ -253,7 +294,7 @@ function useLadder(x, y)
 {
     if (y > 179 && y <= 309)
     {
-        if ((x >=478 && x<=512) || (x>=267 && x<=294))
+        if ((x >= 482 && x <= 512) || (x >= 267 && x <= 294))
         {
             return true;
         }
