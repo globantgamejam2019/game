@@ -1,2 +1,0 @@
-# game
-Main game repository
