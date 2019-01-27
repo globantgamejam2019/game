@@ -46,6 +46,10 @@ function preload ()
     this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
 
     // Pictures
+    this.load.image('tasks_bathroom', 'assets/tasks_bathroom.png');
+    this.load.image('tasks_bedroom', 'assets/tasks_bedroom.png');
+    this.load.image('tasks_kitchen', 'assets/tasks_kitchen.png');
+    this.load.image('tasks_living', 'assets/tasks_living.png');
     this.load.image('background', 'assets/background.png');
     this.load.image('background_grey', 'assets/background_grey.png');
     this.load.image('you_won', 'assets/won.png');
@@ -60,6 +64,7 @@ function preload ()
     this.load.spritesheet('static_dude', 'assets/static_dude.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
+    this.load.spritesheet('climbing', 'assets/climbing.gif', { frameWidth: 36, frameHeight: 36 });
 }
 
 // Create game canvas
@@ -67,6 +72,12 @@ function create ()
 {
     // Add house on the background
     this.add.image(420, 210, 'background');
+
+    // Tasks pictures
+    this.add.image(235, 100, 'tasks_bathroom');
+    this.add.image(550, 100, 'tasks_bedroom');
+    this.add.image(200, 235, 'tasks_kitchen');
+    this.add.image(590, 235, 'tasks_living');
 
     // Platforms
     platforms = this.physics.add.staticGroup();
@@ -81,6 +92,10 @@ function create ()
     platforms.create(728, 193, 'wall');
     platforms.create(363, 105, 'open_wall');
     platforms.create(433, 238, 'open_wall');
+
+    // Create clock related objects
+    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesOut, callbackScope: this });
+    graphics = this.add.graphics({ x: 0, y: 0 });
 
     // The player and its settings
     player = this.physics.add.sprite(670, 220, 'dude');
@@ -118,20 +133,26 @@ function create ()
         repeat: -1
     });
 
+    this.anims.create({
+        key: 'climbing',
+        frames: this.anims.generateFrameNumbers('climbing', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
 
     //  Collide the player and the stars with the platforms
     this.physics.add.collider(player, platforms);
 
-    // Create clock related objects
-    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesOut, callbackScope: this });
-    graphics = this.add.graphics({ x: 0, y: 0 });
-
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     
     startEvents(this);
+
+    // Progress bar
+    //graphics = this.add.graphics({ x: 240, y: 36 });
 
 }
 
@@ -168,6 +189,7 @@ function timesOut()
 // Main update function
 function update ()
 {
+
     // Get current room
     currentRoom = getCurrentRoom(player.x, player.y);
 
@@ -180,6 +202,22 @@ function update ()
     // Update clock if game is still running
     graphics.clear();
     drawClock(40, 40, timerEvent);
+
+    // Bathroom progress bar
+    graphics.fillStyle((decayingRooms["BATHROOM"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(214, 109, percentageToProgress(decayingRooms["BATHROOM"]), 5);
+
+    // Bedroom progress bar
+    graphics.fillStyle((decayingRooms["BEDROOM"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(529, 109, percentageToProgress(decayingRooms["BEDROOM"]), 5);
+
+    // Kitchen progress bar
+    graphics.fillStyle((decayingRooms["KITCHEN"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(179, 244, percentageToProgress(decayingRooms["KITCHEN"]), 5);
+
+    // Living progress bar
+    graphics.fillStyle((decayingRooms["LIVING"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(569, 244, percentageToProgress(decayingRooms["LIVING"]), 5);
 
     // Currently using ladder
     if (usingLadder && player.y <= 170)
@@ -204,19 +242,26 @@ function update ()
     else
     {
         player.setVelocityX(0);
-        if (lastMovement == "RIGHT")
+        if (usingLadder)
         {
-            player.anims.play('static_right', true);
+            player.anims.play('climbing', true);
         }
         else
         {
-            player.anims.play('static_left', true);
+            if (lastMovement == "RIGHT")
+            {
+                player.anims.play('static_right', true);
+            }
+            else
+            {
+                player.anims.play('static_left', true);
+            }
         }
     }
 
     if (cursors.up.isDown)
     {
-        if (player.body.touching.down)
+        if (player.body.touching.down || usingLadder)
         {
             if (useLadder(player.x, player.y))
             {
@@ -247,12 +292,10 @@ function update ()
     }
     if (Phaser.Input.Keyboard.JustDown(xKey))
     {
-        console.log("X KEY");
         xWasPressed();
     }
     if (Phaser.Input.Keyboard.JustDown(zKey))
     {
-        console.log("Z KEY");
         zWasPressed();
     }
 
@@ -300,4 +343,24 @@ function useLadder(x, y)
         }
     }
     return false;
+}
+
+// Returns progress bar valid value
+function percentageToProgress(percentage) {
+    if (!percentage && percentage != 0)
+    {
+        return 42; // Phaser progress bar 100%
+    }
+    else
+    {
+        let percentageInt = Math.ceil(percentage);
+        if (percentageInt == 100)
+        {
+            return 42;  // Phaser progress bar 100%
+        }
+        else
+        {
+            return ((percentage*42)/100); // Conversion
+        }
+    }
 }
