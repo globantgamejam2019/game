@@ -1,5 +1,6 @@
 var globalScore = 0;
 let timers = [];
+let timeouts = [];
 
 const pointTickTime = 2000;
 const orderedPointAddition = 10;
@@ -35,6 +36,10 @@ var decayingRooms = {}
 var lastRemovedRoom;
 
 const randomEvents = ["PHONE", "DOOR"];
+const eventCoordinates = {
+    "PHONE": [685, 710, 150, 195],
+    "DOOR": [690, 720, 275, 330]
+}
 var activeRandomEvents = {};
 
 const startingEventState = 100;
@@ -52,7 +57,6 @@ Array.prototype.randomElement = function () {
 
 function startEvents(gameObject) {
     game = gameObject
-    game.sound.add('wrong_sound');
     startRoomDecayTimers();
     startRandomEventTimers();
     pickRoomToDecay(startingRoomState);
@@ -65,8 +69,8 @@ function startRoomDecayTimers() {
 }
 
 function startRandomEventTimers() {
-    setTimeout(startRandomEvent, 20000);
-    setTimeout(startRandomEvent, 40000);
+    timeouts[0] = setTimeout(startRandomEvent, 50000);
+    timeouts[1] = setTimeout(startRandomEvent, 120000);
 }
 
 function pickRoomToDecay(value = startingDecayValue) {
@@ -148,7 +152,7 @@ function xWasPressed() {
 }
 
 function processEventCompletion() {
-    const event = getAssociatedEventForPlayerPosition(); //TODO
+    const event = getAssociatedEventForPlayerPosition();
     if (event && activeRandomEvents[event]) {
         globalScore += eventPointsModifier;
         delete activeRandomEvents[event];
@@ -236,6 +240,28 @@ function clearAllTimers() {
     for (i = 0; i < timers.length; i++) {
         clearInterval(timers[i]);
     }
+    for (i = 0; i < timeouts.length; i++) {
+        clearTimeout(timeouts[i]);
+    }
+}
+
+function getAssociatedEventForPlayerPosition() {
+    for (const event in eventCoordinates) {
+        const coordinates = eventCoordinates[event];
+        const minimumX = coordinates[0];
+        const maximumX = coordinates[1];
+        const minimumY = coordinates[2];
+        const maximumY = coordinates[3];
+        if (valueIsBetween(player.x, minimumX, maximumX) &&
+            valueIsBetween(player.y, minimumY, maximumY)) {
+            return event;
+        }
+    }
+    return null;
+}
+
+function valueIsBetween(value, minimum, maximum) {
+    return minimum <= value && value <= maximum;
 }
 
 if (!Object.keys) Object.keys = function (o) {

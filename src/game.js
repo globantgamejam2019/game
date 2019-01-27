@@ -26,8 +26,8 @@ var lastMovement = "";
 var currentRoom = "LIVING";
 var usingLadder = false;
 var xKey;
-var gameTime = 70000;
-var minimumWinningScore = 300;
+var gameTime = 180000;
+var minimumWinningScore = 600;
 
 var graphics;
 var timerEvent;
