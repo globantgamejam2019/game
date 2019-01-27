@@ -29,6 +29,9 @@ var xKey;
 var gameTime = 180000;
 var minimumWinningScore = 600;
 
+var phoneRingingImage;
+var doorknockImage;
+
 var graphics;
 var timerEvent;
 var clockSize = 20;
@@ -57,15 +60,18 @@ function preload() {
     this.load.image('first_floor', 'assets/first_floor.png');
     this.load.image('wall', 'assets/wall.png');
     this.load.image('open_wall', 'assets/open_wall.png');
+    this.load.image('UP', 'assets/up_arrow.png');
+    this.load.image('DOWN', 'assets/down_arrow.png');
+    this.load.image('LEFT', 'assets/left_arrow.png');
+    this.load.image('RIGHT', 'assets/right_arrow.png');
+    this.load.image('PHONE', 'assets/phone.png');
+    this.load.image('DOOR', 'assets/door.png');
+
     this.load.spritesheet('static_dude', 'assets/static_dude.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('climbing', 'assets/climbing.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('x_pressed', 'assets/press_x_key.png', { frameWidth: 20, frameHeight: 20 });
-    this.load.image('UP', 'assets/up_arrow.png');
-    this.load.image('DOWN', 'assets/down_arrow.png');
-    this.load.image('LEFT', 'assets/left_arrow.png');
-    this.load.image('RIGHT', 'assets/right_arrow.png');
 }
 
 function create() {
@@ -79,6 +85,12 @@ function create() {
     this.add.image(550, 100, 'tasks_bedroom');
     this.add.image(200, 235, 'tasks_kitchen');
     this.add.image(590, 235, 'tasks_living');
+
+    phoneRingingImage = this.add.image(693, 125, 'PHONE');
+    //phoneRingingImage.visible = false;
+
+    doorknockImage = this.add.image(767, 240, 'DOOR');
+    //doorknockImage.visible = false;
 
     platforms = this.physics.add.staticGroup();
 
@@ -185,18 +197,8 @@ function update() {
 
     graphics.clear();
     drawClock(40, 40, timerEvent);
-
-    graphics.fillStyle((decayingRooms["BATHROOM"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(214, 109, percentageToProgress(decayingRooms["BATHROOM"]), 5);
-
-    graphics.fillStyle((decayingRooms["BEDROOM"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(529, 109, percentageToProgress(decayingRooms["BEDROOM"]), 5);
-
-    graphics.fillStyle((decayingRooms["KITCHEN"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(179, 244, percentageToProgress(decayingRooms["KITCHEN"]), 5);
-
-    graphics.fillStyle((decayingRooms["LIVING"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(569, 244, percentageToProgress(decayingRooms["LIVING"]), 5);
+    updateActivitiesGraphics();
+    updateEventsGraphics();
 
     if (usingLadder && player.y <= 170) {
         usingLadder = false;
@@ -258,8 +260,63 @@ function update() {
 
     if (Phaser.Input.Keyboard.JustDown(xKey)) {
         xWasPressed();
+        timeKeyPressingStarted = Date.now();
     } else if (!xKey.isDown) {
         clearEventCompletionTimer();
+        timeKeyPressingStarted = null;
+    }
+}
+
+function updateActivitiesGraphics() {
+    graphics.fillStyle((decayingRooms["BATHROOM"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(214, 109, percentageToProgress(decayingRooms["BATHROOM"]), 5);
+
+    graphics.fillStyle((decayingRooms["BEDROOM"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(529, 109, percentageToProgress(decayingRooms["BEDROOM"]), 5);
+
+    graphics.fillStyle((decayingRooms["KITCHEN"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(179, 244, percentageToProgress(decayingRooms["KITCHEN"]), 5);
+
+    graphics.fillStyle((decayingRooms["LIVING"] ? 0xff0000 : 0x00ff00), 1);
+    graphics.fillRect(569, 244, percentageToProgress(decayingRooms["LIVING"]), 5);
+}
+
+function updateEventsGraphics() {
+    for (i = 0; i < randomEvents.length; i++) {
+        updateGraphicsForEvent(randomEvents[i]);
+    }
+}
+
+function updateGraphicsForEvent(event) {
+    const eventIsActive = activeRandomEvents[event];
+    const coordinates = getCoordinatesForBarAndShowIcon(event, eventIsActive);
+    if (eventIsActive) {
+        const eventIsBeingAddressed = event === getAssociatedEventForPlayerPosition() &&
+            xKey.isDown;
+        if (eventIsBeingAddressed) {
+            graphics.fillStyle(0x00ff00, 1);
+            const progress = (Date.now() - timeKeyPressingStarted) / eventCompletionTimeRequired;
+            const percentage = percentageToProgress(progress * 100);
+            graphics.fillRect(coordinates[0], coordinates[1], percentage, 5);
+        } else {
+            graphics.fillStyle(0xff0000, 1);
+            const percentage = percentageToProgress(activeRandomEvents[event]);
+            console.log(percentage);
+            graphics.fillRect(coordinates[0], coordinates[1], percentage, 5);
+        }
+    }
+}
+
+function getCoordinatesForBarAndShowIcon(event, eventIsActive) {
+    switch (event) {
+        case 'PHONE':
+            phoneRingingImage.visible = eventIsActive;
+            return [672, 134];
+        case 'DOOR':
+            doorknockImage.visible = eventIsActive;
+            return [746, 249];
+        default:
+            throw "Unknown coordinates for given event."
     }
 }
 

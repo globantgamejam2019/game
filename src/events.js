@@ -46,11 +46,15 @@ var activeRandomEvents = {};
 const startingEventState = 100;
 const minimumEventState = 0;
 const eventDecayTickTime = 50;
-const eventDecayTickValue = 0.25;
+const eventDecayTickValue = 0.35;
 const eventPointsModifier = 50;
 
-var eventCompletionTimer;
-let eventCompletionTimeout = 3000;
+var eventCompletionTimeout;
+const eventCompletionTimeRequired = 3500;
+
+var timeKeyPressingStarted;
+
+let roomDecayInmunityTime = 6000;
 
 Array.prototype.randomElement = function () {
     return this[Math.floor((Math.random() * this.length))];
@@ -66,11 +70,12 @@ function startEvents(gameObject) {
 function startRoomDecayTimers() {
     timers[0] = setInterval(pickRoomToDecay, decaySelectionTime);
     timers[1] = setInterval(decayRooms, roomDecayTickTime);
-    timers[2] = setInterval(calculatePointVariation, pointTickTime);
+    timers[2] = setInterval(decayEvents, eventDecayTickTime);
+    timers[3] = setInterval(calculatePointVariation, pointTickTime);
 }
 
 function startRandomEventTimers() {
-    timeouts[0] = setTimeout(startRandomEvent, 50000);
+    timeouts[0] = setTimeout(startRandomEvent, 1000);
     timeouts[1] = setTimeout(startRandomEvent, 120000);
 }
 
@@ -103,11 +108,10 @@ function startRandomEvent() {
 
 function decayEvents() {
     for (const event in activeRandomEvents) {
-        let newValue = activeRandomEvents[event] - eventDecayTickTime;
-        if (newValue < minimumEventState) {
+        activeRandomEvents[event] -= eventDecayTickValue;
+        if (activeRandomEvents[event] <= minimumEventState) {
             processEventFailure(event);
         }
-        decayingRooms[room] = newValue;
     }
 }
 
@@ -142,7 +146,7 @@ function startMaintenanceActivity() {
 }
 
 function xWasPressed() {
-    eventCompletionTimer = setTimeout(processEventCompletion, eventCompletionTimeout);
+    eventCompletionTimer = setTimeout(processEventCompletion, eventCompletionTimeRequired);
     if (isSpammingActivityActive) {
         decayingRooms[currentRoom] = Math.min(maximumRoomState,
             decayingRooms[currentRoom] + keySpamIncrease);
@@ -208,7 +212,7 @@ function removeActiveRoomFromDecay() {
     lastRemovedRoom = currentRoom
     setTimeout(function () {
         lastRemovedRoom = null;
-    }, 6000);
+    }, roomDecayInmunityTime);
 }
 
 function zWasPressed() {
