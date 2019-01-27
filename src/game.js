@@ -81,10 +81,10 @@ function create() {
 
     this.add.image(420, 210, 'background');
 
-    this.add.image(235, 100, 'tasks_bathroom');
-    this.add.image(550, 100, 'tasks_bedroom');
-    this.add.image(200, 235, 'tasks_kitchen');
-    this.add.image(590, 235, 'tasks_living');
+    this.add.image(221, 102, 'tasks_bathroom');
+    this.add.image(540, 102, 'tasks_bedroom');
+    this.add.image(334, 229, 'tasks_kitchen');
+    this.add.image(638, 236, 'tasks_living');
 
     phoneRingingImage = this.add.image(693, 125, 'PHONE');
     //phoneRingingImage.visible = false;
@@ -162,7 +162,7 @@ function create() {
 
     startEvents(this);
 
-    scoreText = this.add.text(760, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
+    scoreText = this.add.text(750, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 }
 
 function timesUp() {
