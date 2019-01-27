@@ -40,8 +40,7 @@ var clockSize = 20;
 var game = new Phaser.Game(config);
 
 // Preload all assets
-function preload ()
-{
+function preload() {
     // Sounds
     this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
 
@@ -72,8 +71,7 @@ function preload ()
 }
 
 // Create game canvas
-function create ()
-{
+function create() {
     // Add house on the background
     this.add.image(420, 210, 'background');
 
@@ -152,27 +150,24 @@ function create ()
 
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-    
+
     startEvents(this);
 
     scoreText = this.add.text(760, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 }
 
 // Function called after main timer ran out of time
-function timesOut()
-{
-    if (globalScore >= minWinningScore)
-    {
+function timesOut() {
+    if (globalScore >= minWinningScore) {
         this.add.image(420, 210, 'you_won');
     }
-    else
-    {
+    else {
         this.add.image(420, 210, 'you_lost');
     }
 
     // Set gameover flag
     gameOver = true;
-    
+
     // Change player's color to grey
     player.setTint(0x555555);
 
@@ -184,19 +179,16 @@ function timesOut()
     player.body.allowGravity = true;
 
     // Set last movement frame
-    if (lastMovement == "RIGHT")
-    {
+    if (lastMovement == "RIGHT") {
         player.anims.play('static_right', true);
     }
-    else
-    {
+    else {
         player.anims.play('static_left', true);
     }
 }
 
 // Main update function
-function update ()
-{
+function update() {
 
     // Get current room
     currentRoom = getCurrentRoom(player.x, player.y);
@@ -204,8 +196,7 @@ function update ()
     scoreText.setText("Score: " + globalScore);
 
     // Return if player already lost the game
-    if (gameOver)
-    {
+    if (gameOver) {
         return;
     }
 
@@ -230,57 +221,45 @@ function update ()
     graphics.fillRect(569, 244, percentageToProgress(decayingRooms["LIVING"]), 5);
 
     // Currently using ladder
-    if (usingLadder && player.y <= 170)
-    {
+    if (usingLadder && player.y <= 170) {
         usingLadder = false;
         player.body.allowGravity = true;
     }
 
     // Actions on key press
-    if (cursors.left.isDown && !usingLadder && !activityIsActive())
-    {
+    if (cursors.left.isDown && !usingLadder && !activityIsActive()) {
         player.setVelocityX(-160);
         player.anims.play('left', true);
         lastMovement = "LEFT";
     }
-    else if (cursors.right.isDown && !usingLadder && !activityIsActive())
-    {
+    else if (cursors.right.isDown && !usingLadder && !activityIsActive()) {
         player.setVelocityX(160);
         player.anims.play('right', true);
         lastMovement = "RIGHT";
     }
-    else
-    {
+    else {
         player.setVelocityX(0);
-        if (usingLadder)
-        {
+        if (usingLadder) {
             player.anims.play('climbing', true);
         }
-        else
-        {
-            if (lastMovement == "RIGHT")
-            {
+        else {
+            if (lastMovement == "RIGHT") {
                 player.anims.play('static_right', true);
             }
-            else
-            {
+            else {
                 player.anims.play('static_left', true);
             }
         }
     }
 
-    if (cursors.up.isDown && !activityIsActive())
-    {
-        if (player.body.touching.down || usingLadder)
-        {
-            if (useLadder(player.x, player.y))
-            {
+    if (cursors.up.isDown && !activityIsActive()) {
+        if (player.body.touching.down || usingLadder) {
+            if (useLadder(player.x, player.y)) {
                 usingLadder = true;
                 player.body.allowGravity = false;
                 player.setVelocityY(-80);
             }
-            else
-            {
+            else {
                 usingLadder = false;
                 player.body.allowGravity = true;
                 player.setVelocityY(-330);
@@ -300,42 +279,32 @@ function update ()
     if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
         cursorWasPressed('UP');
     }
-    if (Phaser.Input.Keyboard.JustDown(xKey))
-    {
+    if (Phaser.Input.Keyboard.JustDown(xKey)) {
         xWasPressed();
     }
-    if (Phaser.Input.Keyboard.JustDown(zKey))
-    {
+    if (Phaser.Input.Keyboard.JustDown(zKey)) {
         zWasPressed();
     }
-
 }
 
 // Returns current room based on (x,y) players location
-function getCurrentRoom(x, y)
-{
+function getCurrentRoom(x, y) {
     let room = "";
-    if (y > 176 && y <= 309)
-    {
+    if (y > 176 && y <= 309) {
         // First floor
-        if (x >= 435)
-        {
+        if (x >= 435) {
             room = "LIVING";
         }
-        else
-        {
+        else {
             room = "KITCHEN";
         }
     }
-    else
-    {
+    else {
         // Second floor
-        if (x >= 366)
-        {
+        if (x >= 366) {
             room = "BEDROOM";
         }
-        else
-        {
+        else {
             room = "BATHROOM";
         }
     }
@@ -343,12 +312,9 @@ function getCurrentRoom(x, y)
 }
 
 // Returns true if player is able to use the ladder
-function useLadder(x, y)
-{
-    if (y > 179 && y <= 309)
-    {
-        if ((x >= 482 && x <= 512) || (x >= 267 && x <= 294))
-        {
+function useLadder(x, y) {
+    if (y > 179 && y <= 309) {
+        if ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)) {
             return true;
         }
     }
@@ -357,20 +323,16 @@ function useLadder(x, y)
 
 // Returns progress bar valid value
 function percentageToProgress(percentage) {
-    if (!percentage && percentage != 0)
-    {
+    if (!percentage && percentage != 0) {
         return 42; // Phaser progress bar 100%
     }
-    else
-    {
+    else {
         let percentageInt = Math.ceil(percentage);
-        if (percentageInt == 100)
-        {
+        if (percentageInt == 100) {
             return 42;  // Phaser progress bar 100%
         }
-        else
-        {
-            return ((percentage*42)/100); // Conversion
+        else {
+            return ((percentage * 42) / 100); // Conversion
         }
     }
 }

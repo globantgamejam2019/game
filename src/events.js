@@ -13,7 +13,7 @@ const decaySelectionTime = 3000;
 const decayTickTime = 100;
 const decayTickValue = 0.12;
 
-const keySpamIncrease = 0.7;
+const keySpamIncrease = 1.2;
 
 const possibleKeys = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 const amountOfKeystrokesRequired = 6;
@@ -55,7 +55,6 @@ function pickRoomToDecay() {
     if (roomToDecay) {
         decayingRooms[roomToDecay] = startingRoomState;
     }
-    console.log(decayingRooms);
 }
 
 function decayRooms() {
@@ -81,7 +80,7 @@ function calculatePointVariation() {
 }
 
 function startMaintenanceActivity() {
-    let random = Math.random() >= 0.4;
+    let random = Math.random() >= 0.5;
     if (random) {
         isSpammingActivityActive = true;
     } else {
@@ -110,7 +109,6 @@ function fillRequiredKeystrokesArray() {
 }
 
 function showCorrespondingKeysOnScreen() {
-    console.log(requiredKeys);
     let totalSpace = amountOfKeystrokesRequired * keyImageSize;
     let startingX = player.x - (totalSpace / 2);
     let yPosition = player.y - heightOfKeyImagesAbovePlayer;
