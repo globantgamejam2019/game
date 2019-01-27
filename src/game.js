@@ -42,12 +42,14 @@ var backgroundMusic;
 
 var loadingText;
 
-function preload() {   
+function preload() {
 
     loadingText = this.add.text(380, 200, "Loading...", { fontSize: '12px', fill: '#fff' });
 
     this.load.audio('wrong_sound', 'sounds/wrongSound.ogg');
     this.load.audio('background_music', 'sounds/backgroundMusic.ogg');
+    this.load.audio('you_win', 'sounds/you_win.ogg');
+    this.load.audio('you_lose', 'sounds/you_lose.ogg');
     this.load.audio('PHONE', 'sounds/phoneRing.ogg');
     this.load.audio('DOOR', 'sounds/knockDoor.ogg');
 
@@ -97,10 +99,10 @@ function create() {
     this.add.image(638, 236, 'tasks_living');
 
     phoneRingingImage = this.add.image(693, 125, 'PHONE');
-    //phoneRingingImage.visible = false;
+    phoneRingingImage.visible = false;
 
     doorknockImage = this.add.image(767, 240, 'DOOR');
-    //doorknockImage.visible = false;
+    doorknockImage.visible = false;
 
     platforms = this.physics.add.staticGroup();
 
@@ -192,9 +194,11 @@ function create() {
 function timesUp() {
     if (globalScore >= minimumWinningScore) {
         this.add.image(420, 210, 'you_won');
+        this.sound.add('you_win').play();
     }
     else {
         this.add.image(420, 210, 'you_lost');
+        this.sound.add('you_lose').play();
     }
     gameOver = true;
     backgroundMusic.stop();
