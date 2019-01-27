@@ -17,6 +17,7 @@ const roomDecayTickTime = 50;
 const roomDecayTickValue = 0.25;
 
 const keySpamIncrease = 5;
+var xKeyImage;
 
 const possibleKeys = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 const amountOfKeystrokesRequired = 6;
@@ -132,6 +133,7 @@ function calculatePointVariation() {
 function startMaintenanceActivity() {
     let random = Math.random() >= 0.5;
     if (random) {
+        showXOnScreen();
         isSpammingActivityActive = true;
     } else {
         fillRequiredKeystrokesArray();
@@ -146,6 +148,7 @@ function xWasPressed() {
             decayingRooms[currentRoom] + keySpamIncrease);
         if (decayingRooms[currentRoom] === maximumRoomState) {
             removeActiveRoomFromDecay();
+            xKeyImage.destroy();
             isSpammingActivityActive = false;
         }
     }
@@ -225,6 +228,7 @@ function activityIsActive() {
 function endAllActivities() {
     isSpammingActivityActive = false;
     isKeyPressingActivityActive = false;
+    xKeyImage.destroy();
     requiredKeys = [];
     clearKeyImages();
 }
@@ -243,6 +247,13 @@ function clearAllTimers() {
     for (i = 0; i < timeouts.length; i++) {
         clearTimeout(timeouts[i]);
     }
+}
+
+function showXOnScreen() {
+    let startingX = player.x;
+    let yPosition = player.y - 28;
+    xKeyImage = game.add.sprite(startingX, yPosition, 'x_pressed');
+    xKeyImage.anims.play('pressed', true);
 }
 
 function getAssociatedEventForPlayerPosition() {

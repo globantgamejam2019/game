@@ -61,6 +61,7 @@ function preload() {
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('climbing', 'assets/climbing.gif', { frameWidth: 36, frameHeight: 36 });
+    this.load.spritesheet('x_pressed', 'assets/press_x_key.png', { frameWidth: 20, frameHeight: 20 });
     this.load.image('UP', 'assets/up_arrow.png');
     this.load.image('DOWN', 'assets/down_arrow.png');
     this.load.image('LEFT', 'assets/left_arrow.png');
@@ -131,6 +132,13 @@ function create() {
         key: 'climbing',
         frames: this.anims.generateFrameNumbers('climbing', { start: 0, end: 3 }),
         frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'pressed',
+        frames: this.anims.generateFrameNumbers('x_pressed', { start: 0, end: 1 }),
+        frameRate: 15,
         repeat: -1
     });
 
