@@ -34,9 +34,13 @@ var timerEvent;
 var clockSize = 20;
 
 var game = new Phaser.Game(config);
+var backgroundMusic;
 
 function preload() {
-    this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
+    this.load.audio('wrong_sound', 'sounds/wrongSound.ogg');
+    this.load.audio('background_music', 'sounds/backgroundMusic.ogg');
+    this.load.audio('PHONE', 'sounds/phoneRing.ogg');
+    this.load.audio('DOOR', 'sounds/knockDoor.ogg');
 
     this.load.image('tasks_bathroom', 'assets/tasks_bathroom.png');
     this.load.image('tasks_bedroom', 'assets/tasks_bedroom.png');
@@ -64,6 +68,10 @@ function preload() {
 }
 
 function create() {
+    backgroundMusic = this.sound.add('background_music');
+    backgroundMusic.volume = 0.25;
+    backgroundMusic.play();
+
     this.add.image(420, 210, 'background');
 
     this.add.image(235, 100, 'tasks_bathroom');
@@ -83,7 +91,7 @@ function create() {
     platforms.create(363, 105, 'open_wall');
     platforms.create(433, 238, 'open_wall');
 
-    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesOut, callbackScope: this });
+    timerEvent = this.time.addEvent({ delay: gameTime, callback: timesUp, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
 
     player = this.physics.add.sprite(670, 220, 'dude');
@@ -137,7 +145,7 @@ function create() {
     scoreText = this.add.text(760, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 }
 
-function timesOut() {
+function timesUp() {
     if (globalScore >= minimumWinningScore) {
         this.add.image(420, 210, 'you_won');
     }
@@ -145,6 +153,7 @@ function timesOut() {
         this.add.image(420, 210, 'you_lost');
     }
     gameOver = true;
+    backgroundMusic.stop();
     clearAllTimers();
     player.setTint(0x555555);
     player.setVelocityX(0);

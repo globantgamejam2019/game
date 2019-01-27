@@ -65,8 +65,8 @@ function startRoomDecayTimers() {
 }
 
 function startRandomEventTimers() {
-    setTimeout(startRandomEvent, 2000);
-    setTimeout(startRandomEvent, 4000);
+    setTimeout(startRandomEvent, 20000);
+    setTimeout(startRandomEvent, 40000);
 }
 
 function pickRoomToDecay(value = startingDecayValue) {
@@ -91,6 +91,7 @@ function startRandomEvent() {
         x => !Object.keys(activeRandomEvents).includes(x));
     let eventToStart = unstartedEvents.randomElement();
     if (eventToStart) {
+        game.sound.play(eventToStart);
         activeRandomEvents[eventToStart] = startingEventState;
     }
 }
