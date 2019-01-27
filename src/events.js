@@ -75,8 +75,10 @@ function startRoomDecayTimers() {
 }
 
 function startRandomEventTimers() {
-    timeouts[0] = setTimeout(startRandomEvent, 1000);
-    timeouts[1] = setTimeout(startRandomEvent, 120000);
+    timeouts[0] = setTimeout(startRandomEvent, 30000);
+    timeouts[1] = setTimeout(startRandomEvent, 90000);
+    timeouts[2] = setTimeout(startRandomEvent, 120000);
+    timeouts[3] = setTimeout(startRandomEvent, 160000);
 }
 
 function pickRoomToDecay(value = startingDecayValue) {
@@ -233,9 +235,11 @@ function activityIsActive() {
 function endAllActivities() {
     isSpammingActivityActive = false;
     isKeyPressingActivityActive = false;
-    xKeyImage.destroy();
     requiredKeys = [];
     clearKeyImages();
+    if (xKeyImage) {
+        xKeyImage.destroy();
+    }
 }
 
 function clearKeyImages() {
