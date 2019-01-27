@@ -7,6 +7,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
+            //gravity: { y: 750 },
             gravity: { y: 300 },
             debug: false
         }
@@ -26,7 +27,7 @@ var score = 0;
 var gameOver = false;
 var scoreText;
 var lastMovement = "";
-var currentRoom = "LIVING";
+var currentRoom = "LIVING"; // Starting room
 
 // Clock related globals
 var graphics;
@@ -38,8 +39,14 @@ var game = new Phaser.Game(config);
 function preload ()
 {
     this.load.image('background', 'assets/background.png');
+    this.load.image('background_grey', 'assets/background_grey.png');
+    this.load.image('you_won', 'assets/won.png');
+    this.load.image('you_lost', 'assets/lost.png');
     this.load.image('ceiling', 'assets/ceiling.png');
-    this.load.image('second_floor', 'assets/second_floor.png');
+    //this.load.image('second_floor', 'assets/second_floor.png');
+    this.load.image('second_floor_1', 'assets/second_floor_1.png');
+    this.load.image('second_floor_2', 'assets/second_floor_2.png');
+    this.load.image('second_floor_3', 'assets/second_floor_3.png');
     this.load.image('first_floor', 'assets/first_floor.png');
     this.load.image('wall', 'assets/wall.png');
     this.load.image('open_wall', 'assets/open_wall.png');
@@ -64,7 +71,10 @@ function create ()
 
     // Create all ledges
     platforms.create(414, 328, 'first_floor');
-    platforms.create(414, 200, 'second_floor');
+    //platforms.create(414, 200, 'second_floor');
+    platforms.create(172, 201, 'second_floor_1');
+    platforms.create(389, 201, 'second_floor_2');
+    platforms.create(630, 201, 'second_floor_3');
     platforms.create(414, 65, 'ceiling');
     platforms.create(97, 193, 'wall');
     platforms.create(728, 193, 'wall');
@@ -116,15 +126,6 @@ function create ()
         repeat: -1
     });
 
-    /*
-    this.anims.create({
-        key: 'down',
-        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    */
-
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
 
@@ -166,14 +167,20 @@ function create ()
     timerEvent = this.time.addEvent({ delay: 60000, callback: timesOut, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
 
+    //player.enable = false;
+    player.allowGravity = false;
+
 }
 
 // Function called after we ran out of time
+// TODO: Determine here if player won or lost
 function timesOut()
 {
     //this.physics.pause();
+    //this.add.image(420, 210, 'background_grey');
+    this.add.image(420, 210, 'you_won');
     gameOver = true;
-    scoreText = this.add.text(16, 16, 'Perdiste', { fontSize: '32px', fill: '#000' });
+    //scoreText = this.add.text(16, 16, 'Perdiste', { fontSize: '32px', fill: '#000' });
     player.setTint(0x555555);
 }
 
@@ -183,10 +190,14 @@ function update ()
     //console.log(timerEvent);
 
     //console.log("player.x = " + player.x);
-    //console.log("player.y = " + player.x);
+    //console.log("player.y = " + player.y);
 
-    currentRoom = getCurrentRoom(0, 0);
-    console.log(currentRoom);
+    // Get current room
+    currentRoom = getCurrentRoom(player.x, player.y);
+    //console.log(currentRoom);
+
+    // Is able to use the ladder?
+    //console.log(useLadder(player.x, player.y));
 
     if (gameOver)
     {
@@ -255,17 +266,69 @@ function update ()
             //console.log("static left");
             player.anims.play('static_left', true);
         }
-
     }
 
-    if (cursors.up.isDown && player.body.touching.down)
+    if (cursors.up.isDown)
     {
-        player.setVelocityY(-330);
+        if (useLadder(player.x, player.y))
+        {
+            console.log("fdf");
+            player.allowGravity = false;
+            player.setVelocityY(-120);
+            player.setVelocityX(0);
+        }
+        else
+        {
+            player.setVelocityY(-330);
+        }
+        
     }
 }
 
 // Returns current room based on (x,y) players location
 function getCurrentRoom(x, y)
 {
-    return "LIVING";
+    let room = "";
+    if (y > 176 && y <= 309)
+    {
+        // First floor
+        if (x >= 435)
+        {
+            room = "LIVING";
+        }
+        else
+        {
+            room = "KITCHEN";
+        }
+    }
+    else
+    {
+        // Second floor
+        if (x >= 366)
+        {
+            room = "BEDROOM";
+        }
+        else
+        {
+            room = "BATHROOM";
+        }
+    }
+    return room;
+}
+
+// Returns true if player is able to use the ladder
+function useLadder(x, y) {
+    if (y > 179 && y <= 309) {
+        if ((x >=478 && x<=512) || (x>=267 && x<=294)) {
+            return true;
+        }
+    }
+    /*
+    if (y == 176) {
+        if ((x >=478 && x<=512) || (x>=267 && x<=296)) {
+            return true;
+        }
+    }
+    */
+    return false;
 }
