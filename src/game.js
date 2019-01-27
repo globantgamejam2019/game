@@ -22,14 +22,14 @@ var config = {
 var player;
 var platforms;
 var cursors;
-var score = 0;
 var gameOver = false;
 var scoreText;
 var lastMovement = "";
 var currentRoom = "LIVING";
 var usingLadder = false;
 var xKey;
-var gameTime = 120000;
+var gameTime = 30000; // time for mom to get home
+var minWinningScore = 300;
 
 // Clock related globals
 var graphics;
@@ -155,16 +155,20 @@ function create ()
     
     startEvents(this);
 
-    // Progress bar
-    //graphics = this.add.graphics({ x: 240, y: 36 });
-
+    scoreText = this.add.text(760, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 }
 
 // Function called after main timer ran out of time
 function timesOut()
 {
-    //this.add.image(420, 210, 'you_won');
-    this.add.image(420, 210, 'you_lost');
+    if (globalScore >= minWinningScore)
+    {
+        this.add.image(420, 210, 'you_won');
+    }
+    else
+    {
+        this.add.image(420, 210, 'you_lost');
+    }
 
     // Set gameover flag
     gameOver = true;
@@ -196,6 +200,8 @@ function update ()
 
     // Get current room
     currentRoom = getCurrentRoom(player.x, player.y);
+
+    scoreText.setText("Score: " + globalScore);
 
     // Return if player already lost the game
     if (gameOver)
@@ -231,13 +237,13 @@ function update ()
     }
 
     // Actions on key press
-    if (cursors.left.isDown && !usingLadder)
+    if (cursors.left.isDown && !usingLadder && !activityIsActive())
     {
         player.setVelocityX(-160);
         player.anims.play('left', true);
         lastMovement = "LEFT";
     }
-    else if (cursors.right.isDown && !usingLadder)
+    else if (cursors.right.isDown && !usingLadder && !activityIsActive())
     {
         player.setVelocityX(160);
         player.anims.play('right', true);
@@ -263,7 +269,7 @@ function update ()
         }
     }
 
-    if (cursors.up.isDown)
+    if (cursors.up.isDown && !activityIsActive())
     {
         if (player.body.touching.down || usingLadder)
         {

@@ -1,4 +1,4 @@
-var globalScore;
+var globalScore = 0;
 
 const pointTickTime = 2000;
 const orderedPointAddition = 10;
@@ -81,13 +81,13 @@ function calculatePointVariation() {
 }
 
 function startMaintenanceActivity() {
-    //let random = Math.random() >= 0.4;
-    //if (random) {
-    //    isSpammingActivityActive = true;
-    //} else {
-    fillRequiredKeystrokesArray();
-    isKeyPressingActivityActive = true;
-    //}
+    let random = Math.random() >= 0.4;
+    if (random) {
+        isSpammingActivityActive = true;
+    } else {
+        fillRequiredKeystrokesArray();
+        isKeyPressingActivityActive = true;
+    }
 }
 
 function xWasPressed() {
