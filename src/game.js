@@ -28,6 +28,7 @@ var usingLadder = false;
 var xKey;
 var gameTime = 180000;
 var minimumWinningScore = 600;
+var gameStarted = false;
 
 var phoneRingingImage;
 var doorknockImage;
@@ -67,6 +68,7 @@ function preload() {
     this.load.image('PHONE', 'assets/phone.png');
     this.load.image('DOOR', 'assets/door.png');
 
+    this.load.spritesheet('start_game', 'assets/start_button.png', { frameWidth: 98, frameHeight: 24 });
     this.load.spritesheet('static_dude', 'assets/static_dude.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
@@ -103,6 +105,10 @@ function create() {
     platforms.create(728, 193, 'wall');
     platforms.create(363, 105, 'open_wall');
     platforms.create(433, 238, 'open_wall');
+
+    buttonPlay = this.physics.add.sprite(414, 300, 'start_game');
+    buttonPlay.body.allowGravity = false;
+    buttonPlay.visible = false;
 
     timerEvent = this.time.addEvent({ delay: gameTime, callback: timesUp, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
@@ -152,6 +158,13 @@ function create() {
         frames: this.anims.generateFrameNumbers('x_pressed', { start: 0, end: 1 }),
         frameRate: 15,
         repeat: -1
+    });
+
+    this.anims.create({
+        key: 'pushing_start',
+        frames: this.anims.generateFrameNumbers('start_game', { start: 0, end: 1 }),
+        frameRate: 10,
+        repeat: 1
     });
 
     cursors = this.input.keyboard.createCursorKeys();
@@ -205,12 +218,12 @@ function update() {
         player.body.allowGravity = true;
     }
 
-    if (cursors.left.isDown && !usingLadder && !activityIsActive()) {
+    if (cursors.left.isDown && !usingLadder && !activityIsActive() && gameStarted) {
         player.setVelocityX(-160);
         player.anims.play('left', true);
         lastMovement = "LEFT";
     }
-    else if (cursors.right.isDown && !usingLadder && !activityIsActive()) {
+    else if (cursors.right.isDown && !usingLadder && !activityIsActive() && gameStarted) {
         player.setVelocityX(160);
         player.anims.play('right', true);
         lastMovement = "RIGHT";
@@ -228,7 +241,7 @@ function update() {
         }
     }
 
-    if (cursors.up.isDown && !activityIsActive() &&
+    if (cursors.up.isDown && !activityIsActive() && gameStarted &&
         (player.body.touching.down || usingLadder)) {
         if (useLadder(player.x, player.y)) {
             usingLadder = true;
@@ -242,43 +255,55 @@ function update() {
         }
     }
 
-    if (Phaser.Input.Keyboard.JustDown(cursors.left)) {
-        cursorWasPressed('LEFT');
-    }
-    if (Phaser.Input.Keyboard.JustDown(cursors.right)) {
-        cursorWasPressed('RIGHT');
-    }
-    if (Phaser.Input.Keyboard.JustDown(cursors.down)) {
-        cursorWasPressed('DOWN');
-    }
-    if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
-        cursorWasPressed('UP');
-    }
-    if (Phaser.Input.Keyboard.JustDown(zKey)) {
-        zWasPressed();
+    if (gameStarted) {
+        if (Phaser.Input.Keyboard.JustDown(cursors.left)) {
+            cursorWasPressed('LEFT');
+        }
+        if (Phaser.Input.Keyboard.JustDown(cursors.right)) {
+            cursorWasPressed('RIGHT');
+        }
+        if (Phaser.Input.Keyboard.JustDown(cursors.down)) {
+            cursorWasPressed('DOWN');
+        }
+        if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
+            cursorWasPressed('UP');
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(xKey)) {
+            xWasPressed();
+            timeKeyPressingStarted = Date.now();
+        } else if (!xKey.isDown) {
+            clearEventCompletionTimer();
+            timeKeyPressingStarted = null;
+        }
     }
 
-    if (Phaser.Input.Keyboard.JustDown(xKey)) {
-        xWasPressed();
-        timeKeyPressingStarted = Date.now();
-    } else if (!xKey.isDown) {
-        clearEventCompletionTimer();
-        timeKeyPressingStarted = null;
+    if (Phaser.Input.Keyboard.JustDown(zKey)) {
+        if (gameStarted) {
+
+            zWasPressed();
+        }
+        else {
+            buttonPlay.anims.play('pushing_start', true);
+            gameStarted = true;
+            startEvents(this);
+            buttonPlay.destroy();
+        }
     }
 }
 
 function updateActivitiesGraphics() {
     graphics.fillStyle((decayingRooms["BATHROOM"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(214, 109, percentageToProgress(decayingRooms["BATHROOM"]), 5);
+    graphics.fillRect(200, 111, percentageToProgress(decayingRooms["BATHROOM"]), 5);
 
     graphics.fillStyle((decayingRooms["BEDROOM"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(529, 109, percentageToProgress(decayingRooms["BEDROOM"]), 5);
+    graphics.fillRect(519, 111, percentageToProgress(decayingRooms["BEDROOM"]), 5);
 
     graphics.fillStyle((decayingRooms["KITCHEN"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(179, 244, percentageToProgress(decayingRooms["KITCHEN"]), 5);
+    graphics.fillRect(313, 238, percentageToProgress(decayingRooms["KITCHEN"]), 5);
 
     graphics.fillStyle((decayingRooms["LIVING"] ? 0xff0000 : 0x00ff00), 1);
-    graphics.fillRect(569, 244, percentageToProgress(decayingRooms["LIVING"]), 5);
+    graphics.fillRect(617, 245, percentageToProgress(decayingRooms["LIVING"]), 5);
 }
 
 function updateEventsGraphics() {
