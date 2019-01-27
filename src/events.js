@@ -1,4 +1,5 @@
 var globalScore = 0;
+let timers = [];
 
 const pointTickTime = 2000;
 const orderedPointAddition = 10;
@@ -6,14 +7,15 @@ const unorderedPointSubstraction = 20;
 
 const minimumRoomState = 0;
 const maximumRoomState = 100;
-const startingRoomState = maximumRoomState;
+const startingRoomState = 50;
+const startingDecayValue = maximumRoomState;
 
-const decaySelectionTime = 3000;
+const decaySelectionTime = 4000;
 
-const decayTickTime = 100;
-const decayTickValue = 0.12;
+const decayTickTime = 50;
+const decayTickValue = 0.25;
 
-const keySpamIncrease = 1.2;
+const keySpamIncrease = 5;
 
 const possibleKeys = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 const amountOfKeystrokesRequired = 6;
@@ -29,8 +31,8 @@ const separationBetweenShownKeys = 24;
 const heightOfKeyImagesAbovePlayer = 25;
 
 const rooms = ["BATHROOM", "BEDROOM", "KITCHEN", "LIVING"]
-
 var decayingRooms = {}
+var lastRemovedRoom;
 
 Array.prototype.randomElement = function () {
     return this[Math.floor((Math.random() * this.length))];
@@ -40,20 +42,21 @@ function startEvents(gameObject) {
     game = gameObject
     game.sound.add('wrong_sound');
     startRoomDecayTimers();
+    pickRoomToDecay(startingRoomState);
 }
 
 function startRoomDecayTimers() {
-    setInterval(pickRoomToDecay, decaySelectionTime);
-    setInterval(decayRooms, decayTickTime);
-    setInterval(calculatePointVariation, pointTickTime);
+    timers[0] = setInterval(pickRoomToDecay, decaySelectionTime);
+    timers[1] = setInterval(decayRooms, decayTickTime);
+    timers[2] = setInterval(calculatePointVariation, pointTickTime);
 }
 
-function pickRoomToDecay() {
+function pickRoomToDecay(value = startingDecayValue) {
     let undecayingRooms = rooms.filter(
-        x => !Object.keys(decayingRooms).includes(x));
+        x => !Object.keys(decayingRooms).includes(x) && x !== lastRemovedRoom);
     let roomToDecay = undecayingRooms.randomElement();
     if (roomToDecay) {
-        decayingRooms[roomToDecay] = startingRoomState;
+        decayingRooms[roomToDecay] = value;
     }
 }
 
@@ -138,6 +141,10 @@ function cursorWasPressed(keyName) {
 
 function removeActiveRoomFromDecay() {
     delete decayingRooms[currentRoom];
+    lastRemovedRoom = currentRoom
+    setTimeout(function () {
+        lastRemovedRoom = null;
+    }, 6000);
 }
 
 function zWasPressed() {
@@ -166,6 +173,12 @@ function clearKeyImages() {
         requiredKeyImages[i].destroy();
     }
     requiredKeyImages = [];
+}
+
+function clearAllTimers() {
+    for (i = 0; i < timers.length; i++) {
+        clearInterval(timers[i]);
+    }
 }
 
 if (!Object.keys) Object.keys = function (o) {

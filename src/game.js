@@ -1,4 +1,3 @@
-// Phaser configuration
 var config = {
     type: Phaser.AUTO,
     width: 840,
@@ -18,7 +17,6 @@ var config = {
     }
 };
 
-// Global variables
 var player;
 var platforms;
 var cursors;
@@ -28,23 +26,18 @@ var lastMovement = "";
 var currentRoom = "LIVING";
 var usingLadder = false;
 var xKey;
-var gameTime = 30000; // time for mom to get home
-var minWinningScore = 300;
+var gameTime = 70000;
+var minimumWinningScore = 300;
 
-// Clock related globals
 var graphics;
 var timerEvent;
 var clockSize = 20;
 
-// Game
 var game = new Phaser.Game(config);
 
-// Preload all assets
 function preload() {
-    // Sounds
     this.load.audio('wrong_sound', 'sounds/wrong_sound.ogg');
 
-    // Pictures
     this.load.image('tasks_bathroom', 'assets/tasks_bathroom.png');
     this.load.image('tasks_bedroom', 'assets/tasks_bedroom.png');
     this.load.image('tasks_kitchen', 'assets/tasks_kitchen.png');
@@ -70,21 +63,16 @@ function preload() {
     this.load.image('RIGHT', 'assets/right_arrow.png');
 }
 
-// Create game canvas
 function create() {
-    // Add house on the background
     this.add.image(420, 210, 'background');
 
-    // Tasks pictures
     this.add.image(235, 100, 'tasks_bathroom');
     this.add.image(550, 100, 'tasks_bedroom');
     this.add.image(200, 235, 'tasks_kitchen');
     this.add.image(590, 235, 'tasks_living');
 
-    // Platforms
     platforms = this.physics.add.staticGroup();
 
-    // Create all ledges
     platforms.create(414, 328, 'first_floor');
     platforms.create(172, 201, 'second_floor_1');
     platforms.create(389, 201, 'second_floor_2');
@@ -95,18 +83,14 @@ function create() {
     platforms.create(363, 105, 'open_wall');
     platforms.create(433, 238, 'open_wall');
 
-    // Create clock related objects
     timerEvent = this.time.addEvent({ delay: gameTime, callback: timesOut, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
 
-    // The player and its settings
     player = this.physics.add.sprite(670, 220, 'dude');
 
-    //  Player physics properties. Give the little guy a slight bounce.
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
-    //  Our player animations, turning, walking left and walking right.
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('running_left', { start: 0, end: 5 }),
@@ -142,43 +126,30 @@ function create() {
         repeat: -1
     });
 
-    //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
-
-    //  Collide the player and the stars with the platforms
-    this.physics.add.collider(player, platforms);
-
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+
+    this.physics.add.collider(player, platforms);
 
     startEvents(this);
 
     scoreText = this.add.text(760, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 }
 
-// Function called after main timer ran out of time
 function timesOut() {
-    if (globalScore >= minWinningScore) {
+    if (globalScore >= minimumWinningScore) {
         this.add.image(420, 210, 'you_won');
     }
     else {
         this.add.image(420, 210, 'you_lost');
     }
-
-    // Set gameover flag
     gameOver = true;
-
-    // Change player's color to grey
+    clearAllTimers();
     player.setTint(0x555555);
-
-    // Stop player movement
     player.setVelocityX(0);
-
-    // In case player was going up ladder
     usingLadder = false;
     player.body.allowGravity = true;
-
-    // Set last movement frame
     if (lastMovement == "RIGHT") {
         player.anims.play('static_right', true);
     }
@@ -187,46 +158,34 @@ function timesOut() {
     }
 }
 
-// Main update function
 function update() {
-
-    // Get current room
     currentRoom = getCurrentRoom(player.x, player.y);
-
     scoreText.setText("Score: " + globalScore);
 
-    // Return if player already lost the game
     if (gameOver) {
         return;
     }
 
-    // Update clock if game is still running
     graphics.clear();
     drawClock(40, 40, timerEvent);
 
-    // Bathroom progress bar
     graphics.fillStyle((decayingRooms["BATHROOM"] ? 0xff0000 : 0x00ff00), 1);
     graphics.fillRect(214, 109, percentageToProgress(decayingRooms["BATHROOM"]), 5);
 
-    // Bedroom progress bar
     graphics.fillStyle((decayingRooms["BEDROOM"] ? 0xff0000 : 0x00ff00), 1);
     graphics.fillRect(529, 109, percentageToProgress(decayingRooms["BEDROOM"]), 5);
 
-    // Kitchen progress bar
     graphics.fillStyle((decayingRooms["KITCHEN"] ? 0xff0000 : 0x00ff00), 1);
     graphics.fillRect(179, 244, percentageToProgress(decayingRooms["KITCHEN"]), 5);
 
-    // Living progress bar
     graphics.fillStyle((decayingRooms["LIVING"] ? 0xff0000 : 0x00ff00), 1);
     graphics.fillRect(569, 244, percentageToProgress(decayingRooms["LIVING"]), 5);
 
-    // Currently using ladder
     if (usingLadder && player.y <= 170) {
         usingLadder = false;
         player.body.allowGravity = true;
     }
 
-    // Actions on key press
     if (cursors.left.isDown && !usingLadder && !activityIsActive()) {
         player.setVelocityX(-160);
         player.anims.play('left', true);
@@ -287,31 +246,25 @@ function update() {
     }
 }
 
-// Returns current room based on (x,y) players location
 function getCurrentRoom(x, y) {
-    let room = "";
     if (y > 176 && y <= 309) {
-        // First floor
         if (x >= 435) {
-            room = "LIVING";
+            return "LIVING";
         }
         else {
-            room = "KITCHEN";
+            return "KITCHEN";
         }
     }
     else {
-        // Second floor
         if (x >= 366) {
-            room = "BEDROOM";
+            return "BEDROOM";
         }
         else {
-            room = "BATHROOM";
+            return "BATHROOM";
         }
     }
-    return room;
 }
 
-// Returns true if player is able to use the ladder
 function useLadder(x, y) {
     if (y > 179 && y <= 309) {
         if ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)) {
@@ -321,18 +274,17 @@ function useLadder(x, y) {
     return false;
 }
 
-// Returns progress bar valid value
 function percentageToProgress(percentage) {
     if (!percentage && percentage != 0) {
-        return 42; // Phaser progress bar 100%
+        return 42;
     }
     else {
         let percentageInt = Math.ceil(percentage);
         if (percentageInt == 100) {
-            return 42;  // Phaser progress bar 100%
+            return 42;
         }
         else {
-            return ((percentage * 42) / 100); // Conversion
+            return ((percentage * 42) / 100);
         }
     }
 }
