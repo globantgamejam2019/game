@@ -40,7 +40,12 @@ var clockSize = 20;
 var game = new Phaser.Game(config);
 var backgroundMusic;
 
-function preload() {
+var loadingText;
+
+function preload() {   
+
+    loadingText = this.add.text(380, 200, "Loading...", { fontSize: '12px', fill: '#fff' });
+
     this.load.audio('wrong_sound', 'sounds/wrongSound.ogg');
     this.load.audio('background_music', 'sounds/backgroundMusic.ogg');
     this.load.audio('PHONE', 'sounds/phoneRing.ogg');
@@ -67,8 +72,10 @@ function preload() {
     this.load.image('RIGHT', 'assets/right_arrow.png');
     this.load.image('PHONE', 'assets/phone.png');
     this.load.image('DOOR', 'assets/door.png');
+    this.load.image('game_logo', 'assets/logo.gif');
 
     this.load.spritesheet('start_game', 'assets/start_button.png', { frameWidth: 98, frameHeight: 24 });
+    this.load.spritesheet('tutorial_image', 'assets/tutorial_image.png', { frameWidth: 180, frameHeight: 216 });
     this.load.spritesheet('static_dude', 'assets/static_dude.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_right', 'assets/running_right.gif', { frameWidth: 36, frameHeight: 36 });
@@ -77,6 +84,7 @@ function preload() {
 }
 
 function create() {
+
     backgroundMusic = this.sound.add('background_music');
     backgroundMusic.volume = 0.25;
     backgroundMusic.play();
@@ -105,10 +113,6 @@ function create() {
     platforms.create(728, 193, 'wall');
     platforms.create(363, 105, 'open_wall');
     platforms.create(433, 238, 'open_wall');
-
-    buttonPlay = this.physics.add.sprite(414, 300, 'start_game');
-    buttonPlay.body.allowGravity = false;
-    buttonPlay.visible = false;
 
     timerEvent = this.time.addEvent({ delay: gameTime, callback: timesUp, callbackScope: this });
     graphics = this.add.graphics({ x: 0, y: 0 });
@@ -173,9 +177,16 @@ function create() {
 
     this.physics.add.collider(player, platforms);
 
-    startEvents(this);
-
     scoreText = this.add.text(750, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
+
+    buttonPlay = this.physics.add.sprite(414, 300, 'start_game');
+    buttonPlay.body.allowGravity = false;
+    buttonPlay.visible = true;
+
+    tutorialImage = this.physics.add.sprite(415, 150, 'tutorial_image');
+    tutorialImage.body.allowGravity = false;
+
+    this.add.image(44, 200, 'game_logo');
 }
 
 function timesUp() {
@@ -272,9 +283,9 @@ function update() {
         if (Phaser.Input.Keyboard.JustDown(xKey)) {
             xWasPressed();
             timeKeyPressingStarted = Date.now();
-        } else if (!xKey.isDown) {
+        }
+        if (!xKey.isDown) {
             clearEventCompletionTimer();
-            timeKeyPressingStarted = null;
         }
     }
 
@@ -287,6 +298,7 @@ function update() {
             buttonPlay.anims.play('pushing_start', true);
             gameStarted = true;
             startEvents(this);
+            tutorialImage.destroy();
             buttonPlay.destroy();
         }
     }
@@ -364,10 +376,13 @@ function getCurrentRoom(x, y) {
 
 function useLadder(x, y) {
     return (y > 179 && y <= 309 &&
-        ((x >= 482 && x <= 512) || (x >= 267 && x <= 294)));
+        ((x >= 484 && x <= 512) || (x >= 267 && x <= 294)));
 }
 
 function percentageToProgress(percentage) {
+    if (percentage > 100) {
+        return 0;
+    }
     if (!percentage && percentage != 0) {
         return 42;
     }

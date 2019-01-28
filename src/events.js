@@ -169,6 +169,7 @@ function processEventCompletion() {
 function clearEventCompletionTimer() {
     clearTimeout(eventCompletionTimeout);
     eventCompletionTimeout = null;
+    timeKeyPressingStarted = null;
 }
 
 function fillRequiredKeystrokesArray() {
