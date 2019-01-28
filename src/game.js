@@ -42,7 +42,7 @@ var backgroundMusic;
 
 var loadingText;
 
-function preload() {
+function preload() {   
 
     loadingText = this.add.text(380, 200, "Loading...", { fontSize: '12px', fill: '#fff' });
 
@@ -74,9 +74,10 @@ function preload() {
     this.load.image('RIGHT', 'assets/right_arrow.png');
     this.load.image('PHONE', 'assets/phone.png');
     this.load.image('DOOR', 'assets/door.png');
-    this.load.image('game_logo', 'assets/logo.gif');
+    this.load.image('game_logo', 'assets/logo.png');
 
-    this.load.spritesheet('start_game', 'assets/start_button.png', { frameWidth: 98, frameHeight: 24 });
+    this.load.spritesheet('start_game', 'assets/start_button_basico.png', { frameWidth: 119, frameHeight: 24 });
+    this.load.spritesheet('bg_grey', 'assets/background_grey.png', { frameWidth: 840, frameHeight: 420 });
     this.load.spritesheet('tutorial_image', 'assets/tutorial_image.png', { frameWidth: 180, frameHeight: 216 });
     this.load.spritesheet('static_dude', 'assets/static_dude.gif', { frameWidth: 36, frameHeight: 36 });
     this.load.spritesheet('running_left', 'assets/running_left.gif', { frameWidth: 36, frameHeight: 36 });
@@ -99,10 +100,10 @@ function create() {
     this.add.image(638, 236, 'tasks_living');
 
     phoneRingingImage = this.add.image(693, 125, 'PHONE');
-    phoneRingingImage.visible = false;
+    //phoneRingingImage.visible = false;
 
     doorknockImage = this.add.image(767, 240, 'DOOR');
-    doorknockImage.visible = false;
+    //doorknockImage.visible = false;
 
     platforms = this.physics.add.staticGroup();
 
@@ -181,14 +182,22 @@ function create() {
 
     scoreText = this.add.text(750, 16, "Score: " + globalScore, { fontSize: '12px', fill: '#fff' });
 
+    backgroundGrey = this.physics.add.sprite(420, 210, 'bg_grey');
+    backgroundGrey.body.allowGravity = false;
+    backgroundGrey.visible = true;
+
     buttonPlay = this.physics.add.sprite(414, 300, 'start_game');
     buttonPlay.body.allowGravity = false;
     buttonPlay.visible = true;
 
-    tutorialImage = this.physics.add.sprite(415, 150, 'tutorial_image');
+    tutorialImage = this.physics.add.sprite(220, 200, 'tutorial_image');
     tutorialImage.body.allowGravity = false;
 
-    this.add.image(44, 200, 'game_logo');
+    gameLogo = this.physics.add.sprite(415, 150, 'game_logo');
+    gameLogo.body.allowGravity = false;
+
+    programmers = this.add.text(200, 370, "Programming: Lucas Astor, Sebastián Uriarte, Bruno Cattáneo", { fontSize: '12px', fill: '#fff' });
+    designers = this.add.text(200, 385, "Art: Juan Fernández, Ramiro Nieto", { fontSize: '12px', fill: '#fff' });
 }
 
 function timesUp() {
@@ -303,7 +312,11 @@ function update() {
             gameStarted = true;
             startEvents(this);
             tutorialImage.destroy();
+            gameLogo.destroy();
             buttonPlay.destroy();
+            backgroundGrey.destroy();
+            programmers.destroy();
+            designers.destroy();
         }
     }
 }
